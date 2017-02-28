@@ -1,0 +1,9 @@
+{
+"token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE0ODc5NzU1MTUxMjJ9.RWhXswLCfpvaUsMvR3ACmrO0MtTWxWAnVi_t55ru3eM",
+"expires": 1487975515122,
+"user": {
+"name": "arvind",
+"role": "admin",
+"username": "arvind@myapp.com"
+}
+}
