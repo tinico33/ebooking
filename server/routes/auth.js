@@ -6,8 +6,6 @@ var auth = {
  
     var username = req.body.username || '';
     var password = req.body.password || '';
-
-  console.log('password and username : '+password + username);
  
     if (username == '' || password == '') {
       res.status(401);
