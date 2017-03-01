@@ -1,29 +1,30 @@
 var jwt = require('jwt-simple');
+var User = require('../models/User');
  
 var auth = {
  
   login: function(req, res) {
- 
+
     var username = req.body.username || '';
     var password = req.body.password || '';
  
     if (username == '' || password == '') {
       res.status(401);
       res.json({
-        "status": 401,
-        "message": "Invalid credentials"
+        status: 401,
+        message: "Invalid credentials"
       });
       return;
     }
- 
+
     // Fire a query to your DB and check if the credentials are valid
     var dbUserObj = auth.validate(username, password);
    
     if (!dbUserObj) { // If authentication fails, we send a 401 back
       res.status(401);
       res.json({
-        "status": 401,
-        "message": "Invalid credentials"
+        status: 401,
+        message: "Invalid credentials"
       });
       return;
     }
@@ -36,6 +37,59 @@ var auth = {
       res.json(genToken(dbUserObj));
     }
  
+  },
+
+  signup: function(req, res) {
+    var username = req.body.username || '';
+    var password = req.body.password || '';
+    var firstname = req.body.firstname || '';
+    var lastname = req.body.lastname || '';
+ 
+    if (username == '' || password == '' || firstname == '' || lastname == '') {
+      res.status(400);
+      res.json({
+        status: 400,
+        message: "Missing firstname, lastname, username or password"
+      });
+      return;
+    }
+
+    User.findOne({username: username}, function(err, user) {
+      if (err) {
+        res.status(500);
+        res.json({
+          status: 500,
+          message: "Error occured: " + err
+        });
+      } else {
+        if (user) {
+          res.status(409);
+          res.json({
+            status: 409,
+            message: "User already exists"
+          });
+        } else {
+          var userModel = new User();
+          userModel.username = username;
+          userModel.password = password;
+          userModel.firstname = firstname;
+          userModel.lastname = lastname;
+          userModel.save(function(err, user) {
+            user.token = jwt.encode(user, require('../config/secret')());
+            user.save(function(err, user1) {
+              res.status(200);
+              res.json({
+                status: 200,
+                username: user1.username,
+                firstname: user1.firstname,
+                lastname: user1.lastname,
+                token: user1.token
+              });
+            });
+          })
+        }
+      }
+    });
   },
  
   validate: function(username, password) {

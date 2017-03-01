@@ -1,13 +1,18 @@
-var express = require('express');
-var path = require('path');
-var logger = require('morgan');
-var bodyParser = require('body-parser');
+var express     = require('express');
+var path        = require('path');
+var logger      = require('morgan');
+var bodyParser  = require('body-parser');
+var mongoose    = require('mongoose');
  
 var app = express();
  
 app.use(logger('dev'));
 app.use(bodyParser.json());
- 
+
+var mongodbUrl = process.env.MONGO_URL || 'mongodb://localhost:27017/booking';
+
+mongoose.connect(mongodbUrl);
+
 app.all('/*', function(req, res, next) {
   // CORS headers
   res.header("Access-Control-Allow-Origin", "*"); // restrict it to the required domain
@@ -42,5 +47,10 @@ app.set('port', process.env.PORT || 3000);
 var server = app.listen(app.get('port'), function() {
   console.log('Express server listening on port ' + server.address().port);
 });
+
+// If the Node process ends, close the Mongoose connection 
+server.on('close', function() {
+  mongoose.connection.close();
+}); 
 
 module.exports = server;

@@ -24,6 +24,7 @@ describe('Test errors', function () {
     .post('/api/v1/test')
    	.end(function(err, res){
   	  assert.equal(res.status, 401);
+      assert.equal(res.body.status, 401);
   	  assert.equal(res.body.message, 'Invalid Token or Key');
   	  done();
   	});
@@ -34,6 +35,7 @@ describe('Test errors', function () {
     .set('authorization', genToken({name: 'Ploquin', role: 'admin', username: 'nploquin'}, -1))
    	.end(function(err, res){
   	  assert.equal(res.status, 400);
+      assert.equal(res.body.status, 400);
   	  assert.equal(res.body.message, 'Token Expired');
   	  done();
   	});
@@ -55,6 +57,17 @@ describe('Test errors', function () {
       status: 403,
       message: 'Not Authorized'
     }, done);
+  });
+  it('500 on /api/v1/admin/test if token is not valid', function(done) {
+    request(server)
+    .post('/api/v1/admin/test')
+    .set('authorization', 'notValidToken')
+    .end(function(err, res){
+      assert.equal(res.status, 500);
+      assert.equal(res.body.status, 500);
+      assert.equal(res.body.message, 'Internal error');
+      done();
+    });
   });
 });
 
