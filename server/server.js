@@ -7,6 +7,8 @@ var app = express();
 
 app.use(bodyParser.json());
 
+console.log('process.env.MONGO_URL : '+process.env.MONGO_URL);
+
 var mongodbUrl = process.env.MONGO_URL || 'mongodb://localhost:27017/booking';
 
 mongoose.connect(mongodbUrl);

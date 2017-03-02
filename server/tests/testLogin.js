@@ -2,7 +2,7 @@ var assert = require('assert');
 var request = require('supertest');
 var jwt = require('jwt-simple');
 
-describe('Test login', function () {
+describe('Test /login', function () {
   var server;
   beforeEach(function () {
   	delete require.cache[require.resolve('../server')];
@@ -36,10 +36,19 @@ describe('Test login', function () {
     .post('/login')
     .send({ username: '', password: ''})
   	.expect(401, {
-        status: 401,
-        message: 'Invalid credentials'
-      }, done);
-    });
+      status: 401,
+      message: 'Invalid credentials'
+    }, done);
+  });
+  it('401 on /login if username and password are empty', function(done) {
+    request(server)
+    .post('/login')
+    .send({ username: '', password: ''})
+    .expect(401, {
+      status: 401,
+      message: 'Invalid credentials'
+    }, done);
+  });
 });
 
 function genToken(user, expiration) {

@@ -13,6 +13,7 @@
     "express": "^4.14.1",
     "jwt-simple": "^0.5.1",
     "mongoose": "^4.8.5",
-    "supertest": "^3.0.0"
+    "supertest": "^3.0.0",
+    "md5": "^2.2.1"
   }
 }

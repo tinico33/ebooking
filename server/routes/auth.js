@@ -1,4 +1,5 @@
 var jwt = require('jwt-simple');
+var md5 = require('md5');
 var User = require('../models/User');
  
 var auth = {
@@ -27,80 +28,61 @@ var auth = {
         message: "Invalid credentials"
       });
       return;
-    }
- 
-    if (dbUserObj) {
- 
+    } else { 
       // If authentication is success, we will generate a token
       // and dispatch it to the client
- 
+      res.status(200);
       res.json(genToken(dbUserObj));
     }
  
   },
 
   signup: function(req, res) {
-    var username = req.body.username || '';
-    var password = req.body.password || '';
-    var firstname = req.body.firstname || '';
-    var lastname = req.body.lastname || '';
- 
-    if (username == '' || password == '' || firstname == '' || lastname == '') {
-      res.status(400);
-      res.json({
-        status: 400,
-        message: "Missing firstname, lastname, username or password"
-      });
-      return;
-    }
-
-    User.findOne({username: username}, function(err, user) {
-      if (err) {
-        res.status(500);
+    User.findByUsername(req.body.username, function(user) {
+      if (user) {
+        res.status(409);
         res.json({
-          status: 500,
-          message: "Error occured: " + err
+          status: 409,
+          message: "User already exists"
         });
       } else {
-        if (user) {
-          res.status(409);
+        User.addUser( {
+          username: req.body.username,
+          password: req.body.password,
+          firstname: req.body.firstname,
+          lastname: req.body.lastname,
+          email: req.body.email,
+          role: req.body.role
+        }, function(user) {
+          res.status(200);
+          res.json(genToken(user));
+        }, function(error) {
+          res.status(500);
           res.json({
-            status: 409,
-            message: "User already exists"
+            status: 500,
+            message: "Error occured: " + error
           });
-        } else {
-          var userModel = new User();
-          userModel.username = username;
-          userModel.password = password;
-          userModel.firstname = firstname;
-          userModel.lastname = lastname;
-          userModel.save(function(err, user) {
-            user.token = jwt.encode(user, require('../config/secret')());
-            user.save(function(err, user1) {
-              res.status(200);
-              res.json({
-                status: 200,
-                username: user1.username,
-                firstname: user1.firstname,
-                lastname: user1.lastname,
-                token: user1.token
-              });
-            });
-          })
-        }
+        });
       }
+    }, function(error) {
+      res.status(500);
+      res.json({
+        status: 500,
+        message: "Error occured: " + error
+      });
     });
   },
  
   validate: function(username, password) {
-    // spoofing the DB response for simplicity
-    var dbUserObj = { // spoofing a userobject from the DB. 
-      name: 'arvind',
-      role: 'admin',
-      username: 'arvind@myapp.com'
-    };
- 
-    return dbUserObj;
+    User.findByUsernameAndPassword(username, password, function(user) {
+      if (user) {
+        return user;
+      } else {
+        return;
+      }
+    }, function(error) {
+      return;
+    });
   },
  
   validateUser: function(username) {
@@ -126,15 +108,15 @@ var auth = {
 // private method
 function genToken(user) {
   var expires = expiresIn(7); // 7 days
+  var userWithoutPassword = User.userWithoutPassword(user);
   var token = jwt.encode({
     exp: expires,
-    user: user
+    user: userWithoutPassword
   }, require('../config/secret')());
  
   return {
     token: token,
-    expires: expires,
-    user: user
+    user: userWithoutPassword
   };
 }
  
