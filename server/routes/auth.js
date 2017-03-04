@@ -6,10 +6,10 @@ var auth = {
  
   login: function(req, res) {
 
-    var username = req.body.username || '';
+    var email = req.body.email || '';
     var password = req.body.password || '';
  
-    if (username == '' || password == '') {
+    if (email == '' || password == '') {
       res.status(401);
       res.json({
         status: 401,
@@ -19,26 +19,30 @@ var auth = {
     }
 
     // Fire a query to your DB and check if the credentials are valid
-    var dbUserObj = auth.validate(username, password);
-   
-    if (!dbUserObj) { // If authentication fails, we send a 401 back
-      res.status(401);
+    User.findByEMailAndPassword(email, password, function(user) {
+      if (user) {
+        // If authentication is success, we will generate a token
+        // and dispatch it to the client
+        res.status(200);
+        res.json(genToken(user));
+      } else {  // If authentication fails, we send a 401 back
+        res.status(401);
+        res.json({
+          status: 401,
+          message: "Invalid credentials"
+        });
+      }
+    }, function(error) {
+      res.status(500);
       res.json({
-        status: 401,
-        message: "Invalid credentials"
+        status: 500,
+        message: "Error occured: " + error
       });
-      return;
-    } else { 
-      // If authentication is success, we will generate a token
-      // and dispatch it to the client
-      res.status(200);
-      res.json(genToken(dbUserObj));
-    }
- 
+    });
   },
 
   signup: function(req, res) {
-    User.findByUsername(req.body.username, function(user) {
+    User.findByEMail(req.body.email, function(user) {
       if (user) {
         res.status(409);
         res.json({
@@ -47,11 +51,10 @@ var auth = {
         });
       } else {
         User.addUser( {
-          username: req.body.username,
+          email: req.body.email,
           password: req.body.password,
           firstname: req.body.firstname,
           lastname: req.body.lastname,
-          email: req.body.email,
           role: req.body.role
         }, function(user) {
           res.status(200);
@@ -71,38 +74,7 @@ var auth = {
         message: "Error occured: " + error
       });
     });
-  },
- 
-  validate: function(username, password) {
-    User.findByUsernameAndPassword(username, password, function(user) {
-      if (user) {
-        return user;
-      } else {
-        return;
-      }
-    }, function(error) {
-      return;
-    });
-  },
- 
-  validateUser: function(username) {
-    // spoofing the DB response for simplicity
-    if(username == 'adminUser') {
-      return { // spoofing a userobject from the DB. 
-        name: 'arvind',
-        role: 'admin',
-        username: 'arvind@myapp.com'
-      };
-    } else if(username == 'simpleUser') {
-      return { // spoofing a userobject from the DB. 
-        name: 'arvind',
-        role: 'user',
-        username: 'arvind@myapp.com'
-      };
-    } else {
-      return undefined;
-    } 
-  },
+  }
 }
  
 // private method

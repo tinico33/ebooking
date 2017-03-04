@@ -3,28 +3,27 @@ var md5     	= require('md5');
 var Schema      = mongoose.Schema;
 
 var _userSchema   = new Schema({
-    username: {type : String, required : true, index: { unique: true, required : true, index: true} },
-    password: {type : String, required : true, index: { required : true, index: true } },
-    firstname: {type : String, required : true, index: { required : true } },
-    lastname: {type : String, required : true, index: { required : true } },
-    email : {type : String, required : true, index: { unique: true, required : true } },
-    role: {type : String, required : true, default: 'user', index: { required : true } },
+    email: {type : String, required : true, unique: true, index: { index: true} },
+    password: {type : String, required : true, index: { index: true } },
+    firstname: {type : String, required : true },
+    lastname: {type : String, required : true },
+    role: {type : String, required : true, default: 'user' }
 });
 
 var _model = mongoose.model('User', _userSchema);
 
-var _findByUsername = function(username, success, fail) {    
-	_model.findOne({username:username}, function(e, user) {      
-		if(e){        
-			fail(e)      
-		}else{       
+var _findByEMail = function(email, success, fail) {    
+	_model.findOne({email:email}, function(e, user) {      
+		if(e){
+			fail(e)
+		}else{
 			success(user);      
 		}    
 	});
 }  
 
-var _findByUsernameAndPassword = function(username, password, success, fail) {    
-	_model.findOne({username: username, password: md5(password)}, function(e, user) {      
+var _findByEMailAndPassword = function(email, password, success, fail) {    
+	_model.findOne({email: email, password: md5(password)}, function(e, user) {      
 		if(e){
 			fail(e)
 		}else{
@@ -35,14 +34,14 @@ var _findByUsernameAndPassword = function(username, password, success, fail) {
 
 var _addUser = function(user, success, fail) { 
     if (user.password == '') {
+    	// Test "manuel" obligatoire car le md5 d'une chaine vide n'est pas vide
     	fail('Password should not be empty');
     } else {
     	var userModel = new _model();
-	    userModel.username = user.username;
+	    userModel.email = user.email;
 	    userModel.password = md5(user.password);
 	    userModel.firstname = user.firstname;
 	    userModel.lastname = user.lastname;
-	    userModel.email = user.email;
 	    userModel.role = user.role;
 	    userModel.save(function(e, user) {
 			if(e){
@@ -56,20 +55,19 @@ var _addUser = function(user, success, fail) {
 
 var _userWithoutPassword = function(user) {
 	var dbUserObj = { // spoofing a userobject from the DB. 
-		username: user.username,
+		email: user.email,
 		firstname: user.firstname,
 		lastname: user.lastname,
-		email: user.email,
 		role: user.role
     };
     return dbUserObj;
 }
 
 module.exports = {
-	schema : _userSchema,    
-	model : _model,    
-	findByUsername : _findByUsername,
-	findByUsernameAndPassword : _findByUsernameAndPassword,
+	schema : _userSchema,
+	model : _model,
+	findByEMail : _findByEMail,
+	findByEMailAndPassword : _findByEMailAndPassword,
 	addUser : _addUser,
 	userWithoutPassword : _userWithoutPassword
 };

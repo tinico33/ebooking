@@ -1,5 +1,5 @@
 var jwt = require('jwt-simple');
-var validateUser = require('../routes/auth').validateUser;
+var User = require('../models/User');
  
 module.exports = function(req, res, next) {
  
@@ -26,35 +26,40 @@ module.exports = function(req, res, next) {
       }
  
       // Authorize the user to see if s/he can access our resources
-      var dbUser = validateUser(decoded.user.username);
- 
-      if (dbUser) {
-        if ((req.url.indexOf('admin') >= 0 && dbUser.role == 'admin') || (req.url.indexOf('admin') < 0 && req.url.indexOf('/api/v1/') >= 0)) {
-          next(); // To move to next middleware
+      // var dbUser = validateUser(decoded.user.email);
+      User.findByEMail(decoded.user.email, function(user) {
+        if (user) {
+          if ((req.url.indexOf('admin') >= 0 && user.role == 'admin') || (req.url.indexOf('admin') < 0 && req.url.indexOf('/api/v1/') >= 0)) {
+            next(); // To move to next middleware
+          } else {
+            res.status(403);
+            res.json({
+              "status": 403,
+              "message": "Not Authorized"
+            });
+            return;
+          }
         } else {
-          res.status(403);
+          // No user with this email exists, respond back with a 401
+          res.status(401);
           res.json({
-            "status": 403,
-            "message": "Not Authorized"
+            "status": 401,
+            "message": "Invalid User"
           });
           return;
         }
-      } else {
-        // No user with this name exists, respond back with a 401
-        res.status(401);
+      }, function(error) {
+        res.status(500);
         res.json({
-          "status": 401,
-          "message": "Invalid User"
+          status: 500,
+          message: "Error occured: " + error
         });
-        return;
-      }
- 
-    } catch (err) {
+      });
+    } catch (error) {
       res.status(500);
       res.json({
-        "status": 500,
-        "message": "Internal error",
-        "error": err
+        status: 500,
+        message: "Error occured: " + error
       });
     }
   } else {

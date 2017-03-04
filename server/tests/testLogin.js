@@ -11,52 +11,33 @@ describe('Test /login', function () {
   afterEach(function(done) {
     server.close(done);
   });
-  it('401 on /login if username is empty', function(done) {
+  it('should have 401 on /login if email is empty', function(done) {
     request(server)
     .post('/login')
-    .send({ username: '', password: 'notEmpty'})
+    .send({ email: '', password: 'notEmpty'})
    	.end(function(err, res){
   	  assert.equal(res.status, 401);
   	  assert.equal(res.body.message, 'Invalid credentials');
   	  done();
   	});
   });
-  it('401 on /login if password is empty', function(done) {
+  it('should have 401 on /login if password is empty', function(done) {
     request(server)
     .post('/login')
-    .send({ username: 'notEmpty', password: ''})
+    .send({ email: 'notEmpty', password: ''})
    	.end(function(err, res){
   	  assert.equal(res.status, 401);
   	  assert.equal(res.body.message, 'Invalid credentials');
   	  done();
   	});
   });
-  it('401 on /login if username and password are empty', function(done) {
+  it('should have 401 on /login if email and password are empty', function(done) {
     request(server)
     .post('/login')
-    .send({ username: '', password: ''})
+    .send({ email: '', password: ''})
   	.expect(401, {
       status: 401,
       message: 'Invalid credentials'
     }, done);
   });
-  it('401 on /login if username and password are empty', function(done) {
-    request(server)
-    .post('/login')
-    .send({ username: '', password: ''})
-    .expect(401, {
-      status: 401,
-      message: 'Invalid credentials'
-    }, done);
-  });
 });
-
-function genToken(user, expiration) {
-	var dateObj = new Date();
-	var expires = dateObj.setDate(dateObj.getDate() + expiration);
-	var token = jwt.encode({
-		exp: expires,
-		user: user
-	}, require('../config/secret')());
-	return token;
- }
