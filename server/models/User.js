@@ -22,8 +22,8 @@ var _findByEMail = function(email, success, fail) {
 	});
 }  
 
-var _findByEMailAndPassword = function(email, password, success, fail) {    
-	_model.findOne({email: email, password: md5(password)}, function(e, user) {      
+var _findByEMailAndPassword = function(email, password, success, fail) {
+	_model.findOne({email: email, password: md5(password)}, function(e, user) {
 		if(e){
 			fail(e)
 		}else{

@@ -5,18 +5,8 @@ var User = require('../models/User');
 var auth = {
  
   login: function(req, res) {
-
     var email = req.body.email || '';
     var password = req.body.password || '';
- 
-    if (email == '' || password == '') {
-      res.status(401);
-      res.json({
-        status: 401,
-        message: "Invalid credentials"
-      });
-      return;
-    }
 
     // Fire a query to your DB and check if the credentials are valid
     User.findByEMailAndPassword(email, password, function(user) {
@@ -76,25 +66,19 @@ var auth = {
     });
   }
 }
- 
-// private method
+
 function genToken(user) {
-  var expires = expiresIn(7); // 7 days
+  var dateObj = new Date();
+  var expires = dateObj.setDate(dateObj.getDate() + 7);
   var userWithoutPassword = User.userWithoutPassword(user);
   var token = jwt.encode({
     exp: expires,
     user: userWithoutPassword
   }, require('../config/secret')());
- 
   return {
     token: token,
     user: userWithoutPassword
   };
-}
- 
-function expiresIn(numDays) {
-  var dateObj = new Date();
-  return dateObj.setDate(dateObj.getDate() + numDays);
-}
+ }
  
 module.exports = auth;
