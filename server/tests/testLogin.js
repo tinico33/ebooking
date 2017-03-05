@@ -11,7 +11,7 @@ var utilisateur = {
       role: 'user'
     };
 
-describe('Test /login', function () {
+describe('Test /signin', function () {
   var server;
   beforeEach(function (done) {
     delete require.cache[require.resolve('../server')];
@@ -25,9 +25,9 @@ describe('Test /login', function () {
       server.close(done);
     });
   });
-  it('should have 401 on /login if email is empty', function(done) {
+  it('should have 401 on /signin if email is empty', function(done) {
     request(server)
-    .post('/login')
+    .post('/signin')
     .send({ email: '', password: 'notEmpty'})
    	.end(function(err, res){
   	  assert.equal(res.status, 401);
@@ -35,9 +35,9 @@ describe('Test /login', function () {
   	  done();
   	});
   });
-  it('should have 401 on /login if password is empty', function(done) {
+  it('should have 401 on /signin if password is empty', function(done) {
     request(server)
-    .post('/login')
+    .post('/signin')
     .send({ email: 'notEmpty', password: ''})
    	.end(function(err, res){
   	  assert.equal(res.status, 401);
@@ -45,45 +45,45 @@ describe('Test /login', function () {
   	  done();
   	});
   });
-  it('should have 401 on /login if email and password are empty', function(done) {
+  it('should have 401 on /signin if email and password are empty', function(done) {
     request(server)
-    .post('/login')
+    .post('/signin')
     .send({ email: '', password: ''})
   	.expect(401, {
       status: 401,
       message: 'Invalid credentials'
     }, done);
   });
-  it('should have 401 on /login with bad email and good password', function(done) {
+  it('should have 401 on /signin with bad email and good password', function(done) {
     request(server)
-    .post('/login')
+    .post('/signin')
     .send({ email: 'other@gmail.com', password: 'goodPassword'})
     .expect(401, {
       status: 401,
       message: 'Invalid credentials'
     }, done);
   });
-  it('should have 401 on /login with good email and bad password', function(done) {
+  it('should have 401 on /signin with good email and bad password', function(done) {
     request(server)
-    .post('/login')
+    .post('/signin')
     .send({ email: 'ploquin.nicolas@gmail.com', password: 'badpassword'})
     .expect(401, {
       status: 401,
       message: 'Invalid credentials'
     }, done);
   });
-  it('should have 401 on /login with good email and good password (but bad casse on the P)', function(done) {
+  it('should have 401 on /signin with good email and good password (but bad casse on the P)', function(done) {
     request(server)
-    .post('/login')
+    .post('/signin')
     .send({ email: 'ploquin.nicolas@gmail.com', password: 'goodpassword'})
     .expect(401, {
       status: 401,
       message: 'Invalid credentials'
     }, done);
   });
-  it('should have 200 on /login with good email and good password', function(done) {
+  it('should have 200 on /signin with good email and good password', function(done) {
     request(server)
-    .post('/login')
+    .post('/signin')
     .send({ email: 'ploquin.nicolas@gmail.com', password: 'goodPassword'})
     .end(function(err, res){
       assert.equal(res.status, 200);

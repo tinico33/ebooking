@@ -8,7 +8,7 @@ var user = require('./users.js');
 /*
  * Routes that can be accessed by any one
  */
-router.post('/login', auth.login);
+router.post('/signin', auth.signin);
 router.post('/signup', auth.signup);
 
 /*

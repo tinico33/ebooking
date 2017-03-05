@@ -4,7 +4,7 @@ var User = require('../models/User');
  
 var auth = {
  
-  login: function(req, res) {
+  signin: function(req, res) {
     var email = req.body.email || '';
     var password = req.body.password || '';
 
