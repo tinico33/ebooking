@@ -1,8 +1,8 @@
 var assert = require('assert');
 var request = require('supertest');
-var jwt = require('jwt-simple');
 var User = require('../models/User');
 var md5 = require('md5');
+var tools = require('./testTools');
 
 var utilisateur1 = { email: 'ploquin.nicolas_1@gmail.com', password: 'password_1', firstname: 'Nicolas_1', lastname: 'Ploquin_1', role: 'admin'};
 var utilisateur2 = { email: 'ploquin.nicolas_2@gmail.com', password: 'password_2', firstname: 'Nicolas_2', lastname: 'Ploquin_2', role: 'admin_2'};
@@ -12,13 +12,12 @@ var utilisateurs = [utilisateur1, utilisateur2, utilisateur3];
 
 var adminUserId;
 
-process.env.MONGO_URL = 'mongodb://localhost:27017/booking_test';
+var server;
 
 describe('Test /api/v1/admin/user* services', function () {
-  var server;
+  
   beforeEach(function (done) {
-    delete require.cache[require.resolve('../server')];
-    server = require('../server');
+    server = tools.newServer();
     User.addUser( utilisateur1, function(user) {
       adminUserId = user.id;
       User.addUser( utilisateur2, function(user) {
@@ -27,17 +26,14 @@ describe('Test /api/v1/admin/user* services', function () {
         });
       });
     });
-    
   });
   afterEach(function(done) {
-    User.model.remove({}, function() {
-      server.close(done);
-    });
+    tools.removeAllUsers(done);
   });
   it('should have 200 on get /api/v1/admin/users with all users', function(done) {
     request(server)
     .get('/api/v1/admin/users')
-    .set('authorization', genToken({ id: adminUserId}, 1))
+    .set('authorization', tools.genToken({ _id: adminUserId}, 1).token)
     .end(function(err, res){
       assert.equal(res.status, 200);
       for(var i in utilisateurs) {
@@ -55,7 +51,7 @@ describe('Test /api/v1/admin/user* services', function () {
     User.addUser( utilisateur4, function(user) {
       request(server)
       .get('/api/v1/admin/user/'+user.id)
-      .set('authorization', genToken({ id: adminUserId}, 1))
+      .set('authorization', tools.genToken({ _id: adminUserId}, 1).token)
       .end(function(err, res){
         assert.equal(res.status, 200);
         assert.equal(user.id, res.body.id);
@@ -71,7 +67,7 @@ describe('Test /api/v1/admin/user* services', function () {
     var utilisateur4 = { email: 'ploquin.nicolas_1@gmail.com', password: 'password_4', firstname: 'Nicolas_4', lastname: 'Ploquin_4', role: 'admin_4'};
     request(server)
     .post('/api/v1/admin/user/')
-    .set('authorization', genToken({ id: adminUserId}, 1))
+    .set('authorization', tools.genToken({ _id: adminUserId}, 1).token)
     .send(utilisateur4)
     .end(function(err, res){
       assert.equal(res.status, 409);
@@ -84,7 +80,7 @@ describe('Test /api/v1/admin/user* services', function () {
     var utilisateur4 = { email: 'ploquin.nicolas_4@gmail.com', password: '', firstname: 'Nicolas_4', lastname: 'Ploquin_4', role: 'admin_4'};
     request(server)
     .post('/api/v1/admin/user/')
-    .set('authorization', genToken({ id: adminUserId}, 1))
+    .set('authorization', tools.genToken({ _id: adminUserId}, 1).token)
     .send(utilisateur4)
     .end(function(err, res){
       assert.equal(res.status, 500);
@@ -97,7 +93,7 @@ describe('Test /api/v1/admin/user* services', function () {
     var utilisateur4 = { email: 'ploquin.nicolas_4@gmail.com', password: 'password_4', firstname: 'Nicolas_4', lastname: 'Ploquin_4', role: 'admin_4'};
     request(server)
     .post('/api/v1/admin/user/')
-    .set('authorization', genToken({ id: adminUserId}, 1))
+    .set('authorization', tools.genToken({ _id: adminUserId}, 1).token)
     .send(utilisateur4)
     .end(function(err, res){
       assert.equal(res.status, 200);
@@ -128,7 +124,7 @@ describe('Test /api/v1/admin/user* services', function () {
       assert.equal(utilisateur2.role, user.role);
       request(server)
       .put('/api/v1/admin/user/'+user.id)
-      .set('authorization', genToken({ id: adminUserId}, 1))
+      .set('authorization', tools.genToken({ _id: adminUserId}, 1).token)
       .send(infoUpdate)
       .end(function(err, res){
         assert.equal(res.status, 500);
@@ -147,7 +143,7 @@ describe('Test /api/v1/admin/user* services', function () {
       assert.equal(utilisateur2.role, user.role);
       request(server)
       .put('/api/v1/admin/user/'+user.id)
-      .set('authorization', genToken({ id: adminUserId}, 1))
+      .set('authorization', tools.genToken({ _id: adminUserId}, 1).token)
       .send(infoUpdate)
       .end(function(err, res){
         assert.equal(res.status, 200);
@@ -168,7 +164,7 @@ describe('Test /api/v1/admin/user* services', function () {
       assert.equal(utilisateur2.role, user.role);
       request(server)
       .delete('/api/v1/admin/user/'+user.id)
-      .set('authorization', genToken({ id: adminUserId}, 1))
+      .set('authorization', tools.genToken({ _id: adminUserId}, 1).token)
       .end(function(err, res){
         assert.equal(res.status, 200);
         assert.equal(user.id, res.body.user.id);
@@ -181,13 +177,3 @@ describe('Test /api/v1/admin/user* services', function () {
     });
   });
 });
-
-function genToken(user, expiration) {
-  var dateObj = new Date();
-  var expires = dateObj.setDate(dateObj.getDate() + expiration);
-  var token = jwt.encode({
-    exp: expires,
-    user: user
-  }, require('../config/secret')());
-  return token;
-}

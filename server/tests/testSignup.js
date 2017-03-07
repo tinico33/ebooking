@@ -1,16 +1,13 @@
 var assert = require('assert');
 var request = require('supertest');
-var jwt = require('jwt-simple');
 var User = require('../models/User');
 var md5 = require('md5');
-
-process.env.MONGO_URL = 'mongodb://localhost:27017/booking_test';
+var tools = require('./testTools');
 
 describe('Test /signup services', function () {
   var server;
   beforeEach(function (done) {
-    delete require.cache[require.resolve('../server')];
-    server = require('../server');
+    server = tools.newServer();
     User.addUser( { 
       email: 'ploquin.nicolas@gmail.com', 
       password: 'firstpassword', 
@@ -22,9 +19,7 @@ describe('Test /signup services', function () {
     });
   });
   afterEach(function(done) {
-    User.model.remove({}, function() {
-      server.close(done);
-    });
+    tools.removeAllUsers(done);
   });
   it('should have 500 on /signup if email is empty', function(done) {
     request(server)

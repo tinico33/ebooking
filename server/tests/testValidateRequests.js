@@ -1,8 +1,7 @@
 var assert = require('assert');
 var request = require('supertest');
-var jwt = require('jwt-simple');
 var User = require('../models/User');
-var md5 = require('md5');
+var tools = require('./testTools');
 
 process.env.MONGO_URL = 'mongodb://localhost:27017/booking_test';
 
@@ -11,8 +10,7 @@ var userId;
 describe('Test /api/v1/* services', function () {
   var server;
   beforeEach(function (done) {
-    delete require.cache[require.resolve('../server')];
-    server = require('../server');
+    server = tools.newServer();
     User.addUser( { 
       email: 'ploquin.nicolas@gmail.com', 
       password: 'firstpassword', 
@@ -25,9 +23,7 @@ describe('Test /api/v1/* services', function () {
     });
   });
   afterEach(function(done) {
-    User.model.remove({}, function() {
-      server.close(done);
-    });
+    tools.removeAllUsers(done);
   });
   it('should have 401 on /api/v1/test if no token in request', function(done) {
     request(server)
@@ -42,7 +38,7 @@ describe('Test /api/v1/* services', function () {
   it('should have 400 on /api/v1/test if token is expired', function(done) {
     request(server)
     .post('/api/v1/test')
-    .set('authorization', genToken({ id: userId}, -1))
+    .set('authorization', tools.genToken({ _id: userId}, -1).token)
    	.end(function(err, res){
   	  assert.equal(res.status, 400);
       assert.equal(res.body.status, 400);
@@ -53,7 +49,7 @@ describe('Test /api/v1/* services', function () {
   it('should have 401 on /api/v1/test if user in token is invalid', function(done) {
     request(server)
     .post('/api/v1/test')
-    .set('authorization', genToken({ id: '000000000000'}, 1))
+    .set('authorization', tools.genToken({ id: '000000000000'}, 1).token)
     .expect(401, {
       status: 401,
       message: 'Invalid User'
@@ -62,7 +58,7 @@ describe('Test /api/v1/* services', function () {
   it('should have 403 on /api/v1/admin/test if user in token is not admin', function(done) {
     request(server)
     .post('/api/v1/admin/test')
-    .set('authorization', genToken({ id: userId}, 1))
+    .set('authorization', tools.genToken({ _id: userId}, 1).token)
 	  .expect(403, {
       status: 403,
       message: 'Not Authorized'
@@ -80,13 +76,3 @@ describe('Test /api/v1/* services', function () {
     });
   });
 });
-
-function genToken(user, expiration) {
-	var dateObj = new Date();
-	var expires = dateObj.setDate(dateObj.getDate() + expiration);
-	var token = jwt.encode({
-		exp: expires,
-		user: user
-	}, require('../config/secret')());
-	return token;
- }

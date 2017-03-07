@@ -1,12 +1,11 @@
 var assert = require('assert');
 var request = require('supertest');
-var jwt = require('jwt-simple');
+var tools = require('./testTools');
 
 describe('Test errors', function () {
   var server;
   beforeEach(function () {
-  	delete require.cache[require.resolve('../server')];
-    server = require('../server');
+    server = tools.newServer();
   });
   afterEach(function(done) {
     server.close(done);

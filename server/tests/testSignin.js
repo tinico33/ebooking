@@ -1,7 +1,7 @@
 var assert = require('assert');
 var request = require('supertest');
-var jwt = require('jwt-simple');
 var User = require('../models/User');
+var tools = require('./testTools');
 
 var utilisateur = { 
       email: 'ploquin.nicolas@gmail.com', 
@@ -14,16 +14,13 @@ var utilisateur = {
 describe('Test /signin', function () {
   var server;
   beforeEach(function (done) {
-    delete require.cache[require.resolve('../server')];
-    server = require('../server');
+    server = tools.newServer();
     User.addUser( utilisateur, function(user) {
       done();
     });
   });
   afterEach(function(done) {
-    User.model.remove({}, function() {
-      server.close(done);
-    });
+    tools.removeAllUsers(done);
   });
   it('should have 401 on /signin if email is empty', function(done) {
     request(server)
@@ -87,14 +84,14 @@ describe('Test /signin', function () {
     .send({ email: 'ploquin.nicolas@gmail.com', password: 'goodPassword'})
     .end(function(err, res){
       assert.equal(res.status, 200);
-      var token = genToken(utilisateur);
+      var token = tools.genToken(utilisateur);
       assert.notEqual(res.body.user.id, '');
       assert.equal(res.body.user.email, token.user.email);
       assert.equal(res.body.user.firstname, token.user.firstname);
       assert.equal(res.body.user.lastname, token.user.lastname);
       assert.equal(res.body.user.role, token.user.role);
 
-      var decoded = jwt.decode(token.token, require('../config/secret')());
+      var decoded = tools.decodeToken(token);
       assert.equal(decoded.user.email, token.user.email);
       assert.equal(decoded.user.firstname, token.user.firstname);
       assert.equal(decoded.user.lastname, token.user.lastname);
