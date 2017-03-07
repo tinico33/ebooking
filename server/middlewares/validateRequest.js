@@ -10,7 +10,7 @@ module.exports = function(req, res, next) {
   // We skip the token outh for [OPTIONS] requests.
   //if(req.method == 'OPTIONS') next();
  
-  var token = req.headers['authorization'];
+  var token = req.headers['x-access-token'];
 
   if (token) {
     try {

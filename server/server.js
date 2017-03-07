@@ -39,7 +39,6 @@ app.use(function(req, res, next) {
     status: 404,
     message: 'Not Found'
   });
-  next(req, res);
 });
  
 // Start the server

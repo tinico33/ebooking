@@ -33,7 +33,7 @@ describe('Test /api/v1/admin/user* services', function () {
   it('should have 200 on get /api/v1/admin/users with all users', function(done) {
     request(server)
     .get('/api/v1/admin/users')
-    .set('authorization', tools.genToken({ _id: adminUserId}, 1).token)
+    .set('x-access-token', tools.genToken({ _id: adminUserId}, 1).token)
     .end(function(err, res){
       assert.equal(res.status, 200);
       for(var i in utilisateurs) {
@@ -51,7 +51,7 @@ describe('Test /api/v1/admin/user* services', function () {
     User.addUser( utilisateur4, function(user) {
       request(server)
       .get('/api/v1/admin/user/'+user.id)
-      .set('authorization', tools.genToken({ _id: adminUserId}, 1).token)
+      .set('x-access-token', tools.genToken({ _id: adminUserId}, 1).token)
       .end(function(err, res){
         assert.equal(res.status, 200);
         assert.equal(user.id, res.body.id);
@@ -67,7 +67,7 @@ describe('Test /api/v1/admin/user* services', function () {
     var utilisateur4 = { email: 'ploquin.nicolas_1@gmail.com', password: 'password_4', firstname: 'Nicolas_4', lastname: 'Ploquin_4', role: 'admin_4'};
     request(server)
     .post('/api/v1/admin/user/')
-    .set('authorization', tools.genToken({ _id: adminUserId}, 1).token)
+    .set('x-access-token', tools.genToken({ _id: adminUserId}, 1).token)
     .send(utilisateur4)
     .end(function(err, res){
       assert.equal(res.status, 409);
@@ -80,7 +80,7 @@ describe('Test /api/v1/admin/user* services', function () {
     var utilisateur4 = { email: 'ploquin.nicolas_4@gmail.com', password: '', firstname: 'Nicolas_4', lastname: 'Ploquin_4', role: 'admin_4'};
     request(server)
     .post('/api/v1/admin/user/')
-    .set('authorization', tools.genToken({ _id: adminUserId}, 1).token)
+    .set('x-access-token', tools.genToken({ _id: adminUserId}, 1).token)
     .send(utilisateur4)
     .end(function(err, res){
       assert.equal(res.status, 500);
@@ -93,7 +93,7 @@ describe('Test /api/v1/admin/user* services', function () {
     var utilisateur4 = { email: 'ploquin.nicolas_4@gmail.com', password: 'password_4', firstname: 'Nicolas_4', lastname: 'Ploquin_4', role: 'admin_4'};
     request(server)
     .post('/api/v1/admin/user/')
-    .set('authorization', tools.genToken({ _id: adminUserId}, 1).token)
+    .set('x-access-token', tools.genToken({ _id: adminUserId}, 1).token)
     .send(utilisateur4)
     .end(function(err, res){
       assert.equal(res.status, 200);
@@ -124,7 +124,7 @@ describe('Test /api/v1/admin/user* services', function () {
       assert.equal(utilisateur2.role, user.role);
       request(server)
       .put('/api/v1/admin/user/'+user.id)
-      .set('authorization', tools.genToken({ _id: adminUserId}, 1).token)
+      .set('x-access-token', tools.genToken({ _id: adminUserId}, 1).token)
       .send(infoUpdate)
       .end(function(err, res){
         assert.equal(res.status, 500);
@@ -143,7 +143,7 @@ describe('Test /api/v1/admin/user* services', function () {
       assert.equal(utilisateur2.role, user.role);
       request(server)
       .put('/api/v1/admin/user/'+user.id)
-      .set('authorization', tools.genToken({ _id: adminUserId}, 1).token)
+      .set('x-access-token', tools.genToken({ _id: adminUserId}, 1).token)
       .send(infoUpdate)
       .end(function(err, res){
         assert.equal(res.status, 200);
@@ -164,7 +164,7 @@ describe('Test /api/v1/admin/user* services', function () {
       assert.equal(utilisateur2.role, user.role);
       request(server)
       .delete('/api/v1/admin/user/'+user.id)
-      .set('authorization', tools.genToken({ _id: adminUserId}, 1).token)
+      .set('x-access-token', tools.genToken({ _id: adminUserId}, 1).token)
       .end(function(err, res){
         assert.equal(res.status, 200);
         assert.equal(user.id, res.body.user.id);
