@@ -1,45 +1,115 @@
+var User = require('../models/User');
+var jwt = require('jwt-simple');
+
 var users = {
  
   getAll: function(req, res) {
-    var allusers = data; // Spoof a DB call
-    res.json(allusers);
+    User.findAll(function(users) {      
+      var userMap = [];
+      users.forEach(function(user) {
+        userMap.push(User.userWithoutPassword(user));
+      });
+      res.status(200);
+      res.json(userMap);
+    }, function(error) {
+      console.log('ERROR : '+error);
+    });
   },
  
   getOne: function(req, res) {
     var id = req.params.id;
-    var user = data[0]; // Spoof a DB call
-    res.json(user);
+    User.findById(id, function(user) {      
+      res.status(200);
+      res.json(User.userWithoutPassword(user));
+    }, function(error) {
+      console.log('ERROR : '+error);
+    });
   },
  
   create: function(req, res) {
-    var newuser = req.body;
-    data.push(newuser); // Spoof a DB call
-    res.json(newuser);
+    User.findByEMail(req.body.email, function(user) {
+      if (user) {
+        res.status(409);
+        res.json({
+          status: 409,
+          message: "User already exists"
+        });
+      } else {
+        User.addUser( {
+          email: req.body.email,
+          password: req.body.password,
+          firstname: req.body.firstname,
+          lastname: req.body.lastname,
+          role: req.body.role
+        }, function(user) {
+          res.status(200);
+          res.json(genToken(user));
+        }, function(error) {
+          res.status(500);
+          res.json({
+            status: 500,
+            message: "Error occured: " + error
+          });
+        });
+      }
+    }, function(error) {
+      res.status(500);
+      res.json({
+        status: 500,
+        message: "Error occured: " + error
+      });
+    });
   },
  
   update: function(req, res) {
-    var updateuser = req.body;
     var id = req.params.id;
-    data[id] = updateuser // Spoof a DB call
-    res.json(updateuser);
+    User.updateUser(id, {
+      email: req.body.email,
+      password: req.body.password,
+      firstname: req.body.firstname,
+      lastname: req.body.lastname,
+      role: req.body.role
+    }, function(user) {
+      res.status(200);
+      res.json(genToken(user));
+    }, function(error) {
+      res.status(500);
+      res.json({
+        status: 500,
+        message: "Error occured: " + error
+      });
+    });
   },
  
   delete: function(req, res) {
     var id = req.params.id;
-    data.splice(id, 1) // Spoof a DB call
-    res.json(true);
+    User.removeUser({
+      id: id
+    }, function(user) {
+      res.status(200);
+      res.json(genToken(user));
+    }, function(error) {
+      res.status(500);
+      res.json({
+        status: 500,
+        message: "Error occured: " + error
+      });
+    });
   }
-};
+}
  
-var data = [{
-  name: 'user 1',
-  id: '1'
-}, {
-  name: 'user 2',
-  id: '2'
-}, {
-  name: 'user 3',
-  id: '3'
-}];
- 
+function genToken(user) {
+  var dateObj = new Date();
+  var expires = dateObj.setDate(dateObj.getDate() + 7);
+  var userWithoutPassword = User.userWithoutPassword(user);
+  var token = jwt.encode({
+    exp: expires,
+    user: userWithoutPassword
+  }, require('../config/secret')());
+  return {
+    token: token,
+    user: userWithoutPassword
+  };
+} 
+
 module.exports = users;

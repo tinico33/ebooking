@@ -1,6 +1,7 @@
 var jwt = require('jwt-simple');
 var md5 = require('md5');
 var User = require('../models/User');
+var user = require('./users.js');
  
 var auth = {
  
@@ -32,38 +33,7 @@ var auth = {
   },
 
   signup: function(req, res) {
-    User.findByEMail(req.body.email, function(user) {
-      if (user) {
-        res.status(409);
-        res.json({
-          status: 409,
-          message: "User already exists"
-        });
-      } else {
-        User.addUser( {
-          email: req.body.email,
-          password: req.body.password,
-          firstname: req.body.firstname,
-          lastname: req.body.lastname,
-          role: req.body.role
-        }, function(user) {
-          res.status(200);
-          res.json(genToken(user));
-        }, function(error) {
-          res.status(500);
-          res.json({
-            status: 500,
-            message: "Error occured: " + error
-          });
-        });
-      }
-    }, function(error) {
-      res.status(500);
-      res.json({
-        status: 500,
-        message: "Error occured: " + error
-      });
-    });
+    user.create(req, res);
   }
 }
 
@@ -79,6 +49,6 @@ function genToken(user) {
     token: token,
     user: userWithoutPassword
   };
- }
+}
  
 module.exports = auth;

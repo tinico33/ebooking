@@ -27,7 +27,7 @@ module.exports = function(req, res, next) {
  
       // Authorize the user to see if s/he can access our resources
       // var dbUser = validateUser(decoded.user.email);
-      User.findByEMail(decoded.user.email, function(user) {
+      User.findById(decoded.user.id, function(user) {
         if (user) {
           if ((req.url.indexOf('admin') >= 0 && user.role == 'admin') || (req.url.indexOf('admin') < 0 && req.url.indexOf('/api/v1/') >= 0)) {
             next(); // To move to next middleware

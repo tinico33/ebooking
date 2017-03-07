@@ -82,6 +82,7 @@ describe('Test /signup services', function () {
     .send({password: 'firstpasswordCreate', firstname: 'NicolasCreate', lastname: 'PloquinCreate', role: 'userCreate', email: 'othermail@gmail.com'})
     .end(function(err, res){
       assert.equal(res.status, 200);
+      assert.notEqual(res.body.user.id, '');
       assert.equal(res.body.user.firstname, 'NicolasCreate');
       assert.equal(res.body.user.lastname, 'PloquinCreate');
       assert.equal(res.body.user.role, 'userCreate');
@@ -91,6 +92,7 @@ describe('Test /signup services', function () {
       User.model.findOne({email: 'othermail@gmail.com'}, function(err, user) {
         assert.equal(err, undefined);
         assert.notEqual(user, undefined);
+        assert.notEqual(user.id, '');
         assert.equal(user.firstname, 'NicolasCreate');
         assert.equal(user.lastname, 'PloquinCreate');
         assert.equal(user.password, md5('firstpasswordCreate'));

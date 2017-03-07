@@ -6,6 +6,8 @@ var md5 = require('md5');
 
 process.env.MONGO_URL = 'mongodb://localhost:27017/booking_test';
 
+var userId;
+
 describe('Test /api/v1/* services', function () {
   var server;
   beforeEach(function (done) {
@@ -18,6 +20,7 @@ describe('Test /api/v1/* services', function () {
       lastname: 'Ploquin', 
       role: 'user'
     }, function(user) {
+      userId = user.id;
       done();
     });
   });
@@ -39,7 +42,7 @@ describe('Test /api/v1/* services', function () {
   it('should have 400 on /api/v1/test if token is expired', function(done) {
     request(server)
     .post('/api/v1/test')
-    .set('authorization', genToken({ email: 'ploquin.nicolas@gmail.com', firstname: 'Nicolas', lastname: 'Ploquin', role: 'user'}, -1))
+    .set('authorization', genToken({ id: userId}, -1))
    	.end(function(err, res){
   	  assert.equal(res.status, 400);
       assert.equal(res.body.status, 400);
@@ -50,7 +53,7 @@ describe('Test /api/v1/* services', function () {
   it('should have 401 on /api/v1/test if user in token is invalid', function(done) {
     request(server)
     .post('/api/v1/test')
-    .set('authorization', genToken({ email: 'othermail@gmail.com', firstname: 'Nicolas', lastname: 'Ploquin', role: 'user'}, 1))
+    .set('authorization', genToken({ id: '000000000000'}, 1))
     .expect(401, {
       status: 401,
       message: 'Invalid User'
@@ -59,7 +62,7 @@ describe('Test /api/v1/* services', function () {
   it('should have 403 on /api/v1/admin/test if user in token is not admin', function(done) {
     request(server)
     .post('/api/v1/admin/test')
-    .set('authorization', genToken({ email: 'ploquin.nicolas@gmail.com', firstname: 'Nicolas', lastname: 'Ploquin', role: 'user'}, 1))
+    .set('authorization', genToken({ id: userId}, 1))
 	  .expect(403, {
       status: 403,
       message: 'Not Authorized'

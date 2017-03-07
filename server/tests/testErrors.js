@@ -16,6 +16,8 @@ describe('Test errors', function () {
     .get('/')
   	.end(function(err, res){
   	  assert.equal(res.status, 404);
+      assert.equal(res.body.status, 404);
+      assert.equal(res.body.message, 'Not Found');
   	  done();
   	});
   });
