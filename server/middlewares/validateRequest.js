@@ -1,15 +1,15 @@
 var jwt = require('jwt-simple');
 var User = require('../models/User');
- 
+
 module.exports = function(req, res, next) {
- 
+
   // When performing a cross domain request, you will recieve
   // a preflighted request first. This is to check if our the app
   // is safe. 
- 
+
   // We skip the token outh for [OPTIONS] requests.
   //if(req.method == 'OPTIONS') next();
- 
+
   var token = req.headers['x-access-token'];
 
   if (token) {
@@ -24,7 +24,7 @@ module.exports = function(req, res, next) {
         });
         return;
       }
- 
+
       // Authorize the user to see if s/he can access our resources
       // var dbUser = validateUser(decoded.user.email);
       User.findById(decoded.user.id, function(user) {

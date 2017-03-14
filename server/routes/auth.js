@@ -2,9 +2,9 @@ var jwt = require('jwt-simple');
 var md5 = require('md5');
 var User = require('../models/User');
 var user = require('./users.js');
- 
+
 var auth = {
- 
+
   signin: function(req, res) {
     var email = req.body.email || '';
     var password = req.body.password || '';
@@ -16,7 +16,7 @@ var auth = {
         // and dispatch it to the client
         res.status(200);
         res.json(genToken(user));
-      } else {  // If authentication fails, we send a 401 back
+      } else { // If authentication fails, we send a 401 back
         res.status(401);
         res.json({
           status: 401,
@@ -50,5 +50,5 @@ function genToken(user) {
     user: userWithoutPassword
   };
 }
- 
+
 module.exports = auth;

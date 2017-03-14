@@ -1,139 +1,153 @@
 var assert = require('assert');
 var request = require('supertest');
 var User = require('../models/User');
-var md5 = require('md5');
+var Seance = require('../models/Seance');
 var tools = require('./testTools');
 
-var utilisateur1 = {
-  email: 'ploquin.nicolas_1@gmail.com',
-  password: 'password_1',
-  firstname: 'Nicolas_1',
-  lastname: 'Ploquin_1',
+var administrator = {
+  email: 'ploquin.nicolas@gmail.com',
+  password: 'password',
+  firstname: 'Nicolas',
+  lastname: 'Ploquin',
   role: 'admin'
 };
-var utilisateur2 = {
-  email: 'ploquin.nicolas_2@gmail.com',
-  password: 'password_2',
-  firstname: 'Nicolas_2',
-  lastname: 'Ploquin_2',
-  role: 'admin_2'
-};
-var utilisateur3 = {
-  email: 'ploquin.nicolas_3@gmail.com',
-  password: 'password_3',
-  firstname: 'Nicolas_3',
-  lastname: 'Ploquin_3',
-  role: 'admin_3'
+
+var administratorId;
+
+var seance = {
+  title: 'Première séance',
+  start: new Date(2017, 0, 20, 10, 0, 0, 0),
+  end: new Date(2017, 0, 20, 12, 0, 0, 0),
 };
 
-var utilisateurs = [utilisateur1, utilisateur2, utilisateur3];
+var seance2 = {
+  title: 'Seconde séance',
+  start: new Date(2017, 0, 21, 14, 0, 0, 0),
+  end: new Date(2017, 0, 21, 16, 0, 0, 0),
+};
 
-var adminUserId;
+var seance3 = {
+  title: 'Troisième séance',
+  start: new Date(2017, 0, 21, 18, 0, 0, 0),
+  end: new Date(2017, 0, 21, 20, 0, 0, 0),
+};
+
+var seances = [seance, seance2, seance3];
+
+var firstSeanceId;
 
 var server;
 
-describe('Test /api/v1/admin/user* services', function() {
+describe('Test /api/v1/admin/seance* services', function() {
 
   beforeEach(function(done) {
     server = tools.newServer();
-    User.addUser(utilisateur1, function(user) {
-      adminUserId = user.id;
-      User.addUser(utilisateur2, function(user) {
-        User.addUser(utilisateur3, function(user) {
-          done();
+    User.addUser(administrator, function(user) {
+      administratorId = user.id;
+      Seance.addSeance(seance, function(seance) {
+        firstSeanceId = seance._id;
+        Seance.addSeance(seance2, function(seance) {
+          Seance.addSeance(seance3, function(seance) {
+            done();
+          });
         });
       });
+    }, function(err) {
+      console.log(err);
     });
   });
+
   afterEach(function(done) {
     tools.removeAll(done);
   });
-  it('should have 200 on get /api/v1/admin/users with all users', function(done) {
+  it('should have 200 on get /api/v1/admin/seances with all seances', function(done) {
     request(server)
-      .get('/api/v1/admin/users')
+      .get('/api/v1/admin/seances')
       .set('x-access-token', tools.genToken({
-        _id: adminUserId
+        _id: administratorId
       }, 1).token)
       .end(function(err, res) {
         assert.equal(res.status, 200);
-        for (var i in utilisateurs) {
-          assert.notEqual('', res.body[i].id);
-          assert.equal(utilisateurs[i].email, res.body[i].email);
-          assert.equal(utilisateurs[i].firstname, res.body[i].firstname);
-          assert.equal(utilisateurs[i].lastname, res.body[i].lastname);
-          assert.equal(utilisateurs[i].role, res.body[i].role);
+        for (var i in seances) {
+          assert.notEqual('', res.body[i]._id);
+          assert.equal(seances[i].title, res.body[i].title);
+          assert.equal(seances[i].start.getTime(), new Date(res.body[i].start).getTime());
+          assert.equal(seances[i].end.getTime(), new Date(res.body[i].end).getTime());
         }
         done();
       });
   });
-  it('should have 200 on get /api/v1/admin/user/:id with user information', function(done) {
-    var utilisateur4 = {
-      email: 'ploquin.nicolas_4@gmail.com',
-      password: 'password_4',
-      firstname: 'Nicolas_4',
-      lastname: 'Ploquin_4',
-      role: 'admin_4'
-    };
-    User.addUser(utilisateur4, function(user) {
-      request(server)
-        .get('/api/v1/admin/user/' + user.id)
-        .set('x-access-token', tools.genToken({
-          _id: adminUserId
-        }, 1).token)
-        .end(function(err, res) {
-          assert.equal(res.status, 200);
-          assert.equal(user.id, res.body.id);
-          assert.equal(utilisateur4.email, res.body.email);
-          assert.equal(utilisateur4.firstname, res.body.firstname);
-          assert.equal(utilisateur4.lastname, res.body.lastname);
-          assert.equal(utilisateur4.role, res.body.role);
-          done();
-        });
-    });
-  });
-  it('should have 409 on post /api/v1/admin/user/ for create user with same email than other', function(done) {
-    var utilisateur4 = {
-      email: 'ploquin.nicolas_1@gmail.com',
-      password: 'password_4',
-      firstname: 'Nicolas_4',
-      lastname: 'Ploquin_4',
-      role: 'admin_4'
-    };
+  it('should have 200 on get /api/v1/admin/seance/:id with seance information', function(done) {
     request(server)
-      .post('/api/v1/admin/user/')
+      .get('/api/v1/admin/seance/' + firstSeanceId)
       .set('x-access-token', tools.genToken({
-        _id: adminUserId
+        _id: administratorId
       }, 1).token)
-      .send(utilisateur4)
       .end(function(err, res) {
-        assert.equal(res.status, 409);
-        assert.equal(res.body.status, 409);
-        assert.equal(res.body.message, "User already exists");
+        assert.equal(res.status, 200);
+        assert.notEqual('', res.body._id);
+        assert.equal(seance.title, res.body.title);
+        assert.equal(seance.start.getTime(), new Date(res.body.start).getTime());
+        assert.equal(seance.end.getTime(), new Date(res.body.end).getTime());
         done();
       });
   });
-  it('should have 500 on post /api/v1/admin/user/ for create new user without password', function(done) {
-    var utilisateur4 = {
-      email: 'ploquin.nicolas_4@gmail.com',
-      password: '',
-      firstname: 'Nicolas_4',
-      lastname: 'Ploquin_4',
-      role: 'admin_4'
+  it('should have 500 on post /api/v1/admin/seance/ for create new seance without title', function(done) {
+    var seanceSansTitle = {
+      title: '',
+      start: new Date(2017, 0, 20, 10, 0, 0, 0),
+      end: new Date(2017, 0, 20, 12, 0, 0, 0),
     };
     request(server)
-      .post('/api/v1/admin/user/')
+      .post('/api/v1/admin/seance/')
       .set('x-access-token', tools.genToken({
-        _id: adminUserId
+        _id: administratorId
       }, 1).token)
-      .send(utilisateur4)
+      .send(seanceSansTitle)
       .end(function(err, res) {
         assert.equal(res.status, 500);
         assert.equal(res.body.status, 500);
-        assert.equal(res.body.message, 'Error occured: Password should not be empty');
+        assert.ok(res.body.message.includes('Error occured: '));
         done();
       });
   });
-  it('should have 200 on post /api/v1/admin/user/ for create new user', function(done) {
+  it('should have 500 on post /api/v1/admin/seance/ for create new seance without start date', function(done) {
+    var seanceSansTitle = {
+      title: 'Seance without start date',
+      end: new Date(2017, 0, 20, 12, 0, 0, 0),
+    };
+    request(server)
+      .post('/api/v1/admin/seance/')
+      .set('x-access-token', tools.genToken({
+        _id: administratorId
+      }, 1).token)
+      .send(seanceSansTitle)
+      .end(function(err, res) {
+        assert.equal(res.status, 500);
+        assert.equal(res.body.status, 500);
+        assert.ok(res.body.message.includes('Error occured: '));
+        done();
+      });
+  });
+  it('should have 500 on post /api/v1/admin/seance/ for create new seance without end date', function(done) {
+    var seanceSansTitle = {
+      title: 'Seance without end date',
+      start: new Date(2017, 0, 20, 10, 0, 0, 0),
+    };
+    request(server)
+      .post('/api/v1/admin/seance/')
+      .set('x-access-token', tools.genToken({
+        _id: administratorId
+      }, 1).token)
+      .send(seanceSansTitle)
+      .end(function(err, res) {
+        assert.equal(res.status, 500);
+        assert.equal(res.body.status, 500);
+        assert.ok(res.body.message.includes('Error occured: '));
+        done();
+      });
+  });
+  /*it('should have 200 on post /api/v1/admin/user/ for create new user', function(done) {
     var utilisateur4 = {
       email: 'ploquin.nicolas_4@gmail.com',
       password: 'password_4',
@@ -229,7 +243,7 @@ describe('Test /api/v1/admin/user* services', function() {
           done();
         });
     });
-  });
+  }); 
   it('should have 200 on delete /api/v1/admin/user/:id with old user', function(done) {
     User.model.findOne({
       email: utilisateur2.email
@@ -253,5 +267,5 @@ describe('Test /api/v1/admin/user* services', function() {
           done();
         });
     });
-  });
+  });*/
 });

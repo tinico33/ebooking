@@ -1,5 +1,6 @@
 var jwt = require('jwt-simple');
 var User = require('../models/User');
+var Seance = require('../models/Seance');
 var md5 = require('md5');
 
 process.env.MONGO_URL = 'mongodb://localhost:27017/booking_test';
@@ -32,7 +33,21 @@ var _newServer = function() {
 
 var _removeAllUsers = function(done) {
   User.model.remove({}, function() {
-    _server.close(done);
+    done();
+  });
+};
+
+var _removeAllSeances = function(done) {
+  Seance.model.remove({}, function() {
+    done();
+  });
+};
+
+var _removeAll = function(done) {
+  _removeAllUsers(function() {
+    _removeAllSeances(function() {
+      _server.close(done);
+    });
   });
 }
 
@@ -40,5 +55,5 @@ module.exports = {
   genToken: _genToken,
   decodeToken: _decodeToken,
   newServer: _newServer,
-  removeAllUsers: _removeAllUsers,
+  removeAll: _removeAll,
 }
