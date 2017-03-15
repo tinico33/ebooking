@@ -54,14 +54,15 @@ var _addSeance = function(seance, success, fail) {
 	});
 }
 
-var _updateSeance = function(seance, success, fail) {
-	if (seance.id == '') {
+var _updateSeance = function(id, seance, success, fail) {
+	if (id == '') {
 		fail('Id should not be empty');
 	} else {
 		_model.findOneAndUpdate({
-			_id: seance.id
+			_id: id
 		}, seance, {
-			new: true
+			new: true,
+			runValidators: true,
 		}, function(e, seance) {
 			if (e) {
 				fail(e)

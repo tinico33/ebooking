@@ -14,7 +14,7 @@ var administrator = {
 
 var administratorId;
 
-var seance = {
+var seance1 = {
   title: 'Première séance',
   start: new Date(2017, 0, 20, 10, 0, 0, 0),
   end: new Date(2017, 0, 20, 12, 0, 0, 0),
@@ -32,7 +32,7 @@ var seance3 = {
   end: new Date(2017, 0, 21, 20, 0, 0, 0),
 };
 
-var seances = [seance, seance2, seance3];
+var seances = [seance1, seance2, seance3];
 
 var firstSeanceId;
 
@@ -44,7 +44,7 @@ describe('Test /api/v1/admin/seance* services', function() {
     server = tools.newServer();
     User.addUser(administrator, function(user) {
       administratorId = user.id;
-      Seance.addSeance(seance, function(seance) {
+      Seance.addSeance(seance1, function(seance) {
         firstSeanceId = seance._id;
         Seance.addSeance(seance2, function(seance) {
           Seance.addSeance(seance3, function(seance) {
@@ -86,9 +86,9 @@ describe('Test /api/v1/admin/seance* services', function() {
       .end(function(err, res) {
         assert.equal(res.status, 200);
         assert.notEqual('', res.body._id);
-        assert.equal(seance.title, res.body.title);
-        assert.equal(seance.start.getTime(), new Date(res.body.start).getTime());
-        assert.equal(seance.end.getTime(), new Date(res.body.end).getTime());
+        assert.equal(seance1.title, res.body.title);
+        assert.equal(seance1.start.getTime(), new Date(res.body.start).getTime());
+        assert.equal(seance1.end.getTime(), new Date(res.body.end).getTime());
         done();
       });
   });
@@ -147,125 +147,156 @@ describe('Test /api/v1/admin/seance* services', function() {
         done();
       });
   });
-  /*it('should have 200 on post /api/v1/admin/user/ for create new user', function(done) {
-    var utilisateur4 = {
-      email: 'ploquin.nicolas_4@gmail.com',
-      password: 'password_4',
-      firstname: 'Nicolas_4',
-      lastname: 'Ploquin_4',
-      role: 'admin_4'
+  it('should have 200 on post /api/v1/admin/seance/ for create new seance', function(done) {
+    var seanceToAdd = {
+      title: 'Title',
+      start: new Date(2017, 0, 20, 10, 0, 0, 0),
+      end: new Date(2017, 0, 20, 12, 0, 0, 0),
     };
     request(server)
-      .post('/api/v1/admin/user/')
+      .post('/api/v1/admin/seance/')
       .set('x-access-token', tools.genToken({
-        _id: adminUserId
+        _id: administratorId
       }, 1).token)
-      .send(utilisateur4)
+      .send(seanceToAdd)
       .end(function(err, res) {
         assert.equal(res.status, 200);
         assert.notEqual('', res.body.id);
-        assert.equal(utilisateur4.email, res.body.user.email);
-        assert.equal(utilisateur4.firstname, res.body.user.firstname);
-        assert.equal(utilisateur4.lastname, res.body.user.lastname);
-        assert.equal(utilisateur4.role, res.body.user.role);
-        User.model.findOne({
-          email: 'ploquin.nicolas_4@gmail.com'
-        }, function(err, user) {
+        assert.equal(seanceToAdd.title, res.body.title);
+        assert.equal(seanceToAdd.start.getTime(), new Date(res.body.start).getTime());
+        assert.equal(seanceToAdd.end.getTime(), new Date(res.body.end).getTime());
+        Seance.model.findOne({
+          title: 'Title'
+        }, function(err, seance) {
           assert.equal(undefined, err);
-          assert.notEqual(undefined, user);
-          assert.notEqual('', user.id);
-          assert.equal(user.firstname, 'Nicolas_4');
-          assert.equal(user.lastname, 'Ploquin_4');
-          assert.equal(user.password, md5('password_4'));
-          assert.equal(user.email, 'ploquin.nicolas_4@gmail.com');
-          assert.equal(user.role, 'admin_4');
+          assert.notEqual(undefined, seance);
+          assert.notEqual('', seance._id);
+          assert.equal(seanceToAdd.title, seance.title);
+          assert.equal(seanceToAdd.start.getTime(), new Date(seance.start).getTime());
+          assert.equal(seanceToAdd.end.getTime(), new Date(seance.end).getTime());
           done();
         });
       });
   });
-  it('should have 500 on put /api/v1/admin/user/:id with updated user with password empty', function(done) {
-    var infoUpdate = {
-      email: 'ploquin.nicolas_updated@gmail.com',
-      password: '',
-      firstname: 'Nicolas_updated',
-      lastname: 'Ploquin_updated',
-      role: 'admin_updated'
-    };
-    User.model.findOne({
-      email: utilisateur2.email
-    }, function(err, user) {
-      assert.equal(utilisateur2.email, user.email);
-      assert.equal(utilisateur2.firstname, user.firstname);
-      assert.equal(utilisateur2.lastname, user.lastname);
-      assert.equal(utilisateur2.role, user.role);
+  it('should have 200 on put /api/v1/admin/seance/:id with updated seance', function(done) {
+    var seanceToUpdate = {
+      title: 'Séance modifiée',
+      start: new Date(2017, 0, 21, 14, 0, 0, 0),
+      end: new Date(2017, 0, 21, 16, 0, 0, 0),
+    }
+    Seance.model.findById(
+      firstSeanceId,
+      function(err, seance) {
+        assert.equal(seance1.title, seance.title);
+        assert.equal(seance1.start.getTime(), new Date(seance.start).getTime());
+        assert.equal(seance1.end.getTime(), new Date(seance.end).getTime());
+        request(server)
+          .put('/api/v1/admin/seance/' + firstSeanceId)
+          .set('x-access-token', tools.genToken({
+            _id: administratorId
+          }, 1).token)
+          .send(seanceToUpdate)
+          .end(function(err, res) {
+            assert.equal(res.status, 200);
+            assert.equal(seanceToUpdate.title, res.body.title);
+            assert.equal(seanceToUpdate.start.getTime(), new Date(res.body.start).getTime());
+            assert.equal(seanceToUpdate.end.getTime(), new Date(res.body.end).getTime());
+            done();
+          });
+      });
+  });
+  it('should have 500 on put /api/v1/admin/seance/:id with empty start date', function(done) {
+    var seanceToUpdate = {
+      title: 'Séance modifiée',
+      end: new Date(2017, 0, 21, 16, 0, 0, 0),
+    }
+    Seance.model.findById(
+      firstSeanceId,
+      function(err, seance) {
+        assert.equal(seance1.title, seance.title);
+        assert.equal(seance1.start.getTime(), new Date(seance.start).getTime());
+        assert.equal(seance1.end.getTime(), new Date(seance.end).getTime());
+        request(server)
+          .put('/api/v1/admin/seance/' + firstSeanceId)
+          .set('x-access-token', tools.genToken({
+            _id: administratorId
+          }, 1).token)
+          .send(seanceToUpdate)
+          .end(function(err, res) {
+            assert.equal(res.status, 500);
+            assert.equal(res.body.status, 500);
+            assert.ok(res.body.message.includes('Error occured: '));
+            done();
+          });
+      });
+  });
+  it('should have 500 on put /api/v1/admin/seance/:id with empty end date', function(done) {
+    var seanceToUpdate = {
+      title: 'Séance modifiée',
+      start: new Date(2017, 0, 21, 14, 0, 0, 0),
+    }
+    Seance.model.findById(
+      firstSeanceId,
+      function(err, seance) {
+        assert.equal(seance1.title, seance.title);
+        assert.equal(seance1.start.getTime(), new Date(seance.start).getTime());
+        assert.equal(seance1.end.getTime(), new Date(seance.end).getTime());
+        request(server)
+          .put('/api/v1/admin/seance/' + firstSeanceId)
+          .set('x-access-token', tools.genToken({
+            _id: administratorId
+          }, 1).token)
+          .send(seanceToUpdate)
+          .end(function(err, res) {
+            assert.equal(res.status, 500);
+            assert.equal(res.body.status, 500);
+            assert.ok(res.body.message.includes('Error occured: '));
+            done();
+          });
+      });
+  });
+  it('should have 500 on put /api/v1/admin/seance/:id with empty title date', function(done) {
+    var seanceToUpdate = {
+      start: new Date(2017, 0, 21, 14, 0, 0, 0),
+      end: new Date(2017, 0, 21, 16, 0, 0, 0),
+    }
+    Seance.model.findById(
+      firstSeanceId,
+      function(err, seance) {
+        assert.equal(seance1.title, seance.title);
+        assert.equal(seance1.start.getTime(), new Date(seance.start).getTime());
+        assert.equal(seance1.end.getTime(), new Date(seance.end).getTime());
+        request(server)
+          .put('/api/v1/admin/seance/' + firstSeanceId)
+          .set('x-access-token', tools.genToken({
+            _id: administratorId
+          }, 1).token)
+          .send(seanceToUpdate)
+          .end(function(err, res) {
+            assert.equal(res.status, 500);
+            assert.equal(res.body.status, 500);
+            assert.ok(res.body.message.includes('Error occured: '));
+            done();
+          });
+      });
+  });
+  it('should have 200 on delete /api/v1/admin/seance/:id with old seance', function(done) {
+    Seance.model.findById(firstSeanceId, function(err, seance) {
+      assert.equal(seance1.title, seance.title);
+      assert.equal(seance1.start.getTime(), new Date(seance.start).getTime());
+      assert.equal(seance1.end.getTime(), new Date(seance.end).getTime());
       request(server)
-        .put('/api/v1/admin/user/' + user.id)
+        .delete('/api/v1/admin/seance/' + firstSeanceId)
         .set('x-access-token', tools.genToken({
-          _id: adminUserId
+          _id: administratorId
         }, 1).token)
-        .send(infoUpdate)
         .end(function(err, res) {
-          assert.equal(res.status, 500);
-          assert.equal(res.body.status, 500);
-          assert.equal(res.body.message, 'Error occured: Password should not be empty');
+          assert.equal(res.status, 200);
+          assert.equal(seance1.title, res.body.title);
+          assert.equal(seance1.start.getTime(), new Date(res.body.start).getTime());
+          assert.equal(seance1.end.getTime(), new Date(res.body.end).getTime());
           done();
         });
     });
   });
-  it('should have 200 on put /api/v1/admin/user/:id with updated user', function(done) {
-    var infoUpdate = {
-      email: 'ploquin.nicolas_updated@gmail.com',
-      password: 'password_updated',
-      firstname: 'Nicolas_updated',
-      lastname: 'Ploquin_updated',
-      role: 'admin_updated'
-    };
-    User.model.findOne({
-      email: utilisateur2.email
-    }, function(err, user) {
-      assert.equal(utilisateur2.email, user.email);
-      assert.equal(utilisateur2.firstname, user.firstname);
-      assert.equal(utilisateur2.lastname, user.lastname);
-      assert.equal(utilisateur2.role, user.role);
-      request(server)
-        .put('/api/v1/admin/user/' + user.id)
-        .set('x-access-token', tools.genToken({
-          _id: adminUserId
-        }, 1).token)
-        .send(infoUpdate)
-        .end(function(err, res) {
-          assert.equal(res.status, 200);
-          assert.equal(user.id, res.body.user.id);
-          assert.equal(infoUpdate.email, res.body.user.email);
-          assert.equal(infoUpdate.firstname, res.body.user.firstname);
-          assert.equal(infoUpdate.lastname, res.body.user.lastname);
-          assert.equal(infoUpdate.role, res.body.user.role);
-          done();
-        });
-    });
-  }); 
-  it('should have 200 on delete /api/v1/admin/user/:id with old user', function(done) {
-    User.model.findOne({
-      email: utilisateur2.email
-    }, function(err, user) {
-      assert.equal(utilisateur2.email, user.email);
-      assert.equal(utilisateur2.firstname, user.firstname);
-      assert.equal(utilisateur2.lastname, user.lastname);
-      assert.equal(utilisateur2.role, user.role);
-      request(server)
-        .delete('/api/v1/admin/user/' + user.id)
-        .set('x-access-token', tools.genToken({
-          _id: adminUserId
-        }, 1).token)
-        .end(function(err, res) {
-          assert.equal(res.status, 200);
-          assert.equal(user.id, res.body.user.id);
-          assert.equal(utilisateur2.email, res.body.user.email);
-          assert.equal(utilisateur2.firstname, res.body.user.firstname);
-          assert.equal(utilisateur2.lastname, res.body.user.lastname);
-          assert.equal(utilisateur2.role, res.body.user.role);
-          done();
-        });
-    });
-  });*/
 });
