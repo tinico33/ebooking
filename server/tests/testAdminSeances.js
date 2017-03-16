@@ -198,6 +198,7 @@ describe('Test /api/v1/admin/seance* services', function() {
           .send(seanceToUpdate)
           .end(function(err, res) {
             assert.equal(res.status, 200);
+            assert.equal(firstSeanceId, res.body._id);
             assert.equal(seanceToUpdate.title, res.body.title);
             assert.equal(seanceToUpdate.start.getTime(), new Date(res.body.start).getTime());
             assert.equal(seanceToUpdate.end.getTime(), new Date(res.body.end).getTime());
@@ -255,7 +256,7 @@ describe('Test /api/v1/admin/seance* services', function() {
           });
       });
   });
-  it('should have 500 on put /api/v1/admin/seance/:id with empty title date', function(done) {
+  it('should have 500 on put /api/v1/admin/seance/:id with empty title', function(done) {
     var seanceToUpdate = {
       start: new Date(2017, 0, 21, 14, 0, 0, 0),
       end: new Date(2017, 0, 21, 16, 0, 0, 0),
